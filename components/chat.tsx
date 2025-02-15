@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useChat } from "@ai-sdk/react";
+import { ChatMessage } from "@/lib/types";
 
 const users = [
   {
@@ -46,9 +47,34 @@ const users = [
 type User = (typeof users)[number];
 
 export function Chat() {
-  const { messages, input, handleInputChange, handleSubmit } = useChat();
+  const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [open, setOpen] = React.useState(false);
+  const [input, setInput] = React.useState("");
   const inputLength = input.trim().length;
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (inputLength === 0) return;
+    const newMessages: ChatMessage[] = [
+      ...messages,
+      { role: "user", content: input },
+    ];
+    setMessages(newMessages);
+    setInput("");
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: newMessages }),
+    });
+    const data = await response.json();
+
+    if (data.text) {
+      setMessages([...newMessages, { role: "assistant", content: data.text }]);
+    }
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(event.target.value);
+  };
 
   return (
     <>
