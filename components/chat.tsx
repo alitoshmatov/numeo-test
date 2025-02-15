@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Send } from "lucide-react";
+import { Send, Trash } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,7 +14,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useChat } from "@ai-sdk/react";
-import { ChatMessage } from "@/lib/types";
+import { ChatMessage, Product } from "@/lib/types";
+import { ProductCard } from "./products";
+import { useEffect } from "react";
 
 const users = [
   {
@@ -47,34 +49,18 @@ const users = [
 type User = (typeof users)[number];
 
 export function Chat() {
-  const [messages, setMessages] = React.useState<ChatMessage[]>([]);
+  const { messages, input, handleInputChange, handleSubmit } = useChat({
+    initialMessages: JSON.parse(localStorage.getItem("messages") || "[]"),
+    maxSteps: 2,
+  });
+
+  useEffect(() => {
+    localStorage.setItem("messages", JSON.stringify(messages));
+  }, [messages]);
+
   const [open, setOpen] = React.useState(false);
-  const [input, setInput] = React.useState("");
+
   const inputLength = input.trim().length;
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (inputLength === 0) return;
-    const newMessages: ChatMessage[] = [
-      ...messages,
-      { role: "user", content: input },
-    ];
-    setMessages(newMessages);
-    setInput("");
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      body: JSON.stringify({ messages: newMessages }),
-    });
-    const data = await response.json();
-
-    if (data.text) {
-      setMessages([...newMessages, { role: "assistant", content: data.text }]);
-    }
-  };
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(event.target.value);
-  };
 
   return (
     <>
@@ -90,6 +76,17 @@ export function Chat() {
               <p className="text-sm text-muted-foreground">Antique goods</p>
             </div>
           </div>
+          <Button
+            size="icon"
+            variant="outline"
+            className="ml-auto rounded-full"
+            onClick={() => {
+              localStorage.removeItem("messages");
+              window.location.reload();
+            }}
+          >
+            <Trash />
+          </Button>
           {/* <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -110,17 +107,31 @@ export function Chat() {
         <CardContent className="flex-1 overflow-auto">
           <div className="space-y-2">
             {messages.map((message, index) => (
-              <div
-                key={index}
-                className={cn(
-                  "flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
-                  message.role === "user"
-                    ? "ml-auto bg-primary text-primary-foreground"
-                    : "bg-muted"
-                )}
-              >
-                {message.content}
-              </div>
+              <React.Fragment key={index}>
+                <div
+                  className={cn(
+                    "flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
+                    message.role === "user"
+                      ? "ml-auto bg-primary text-primary-foreground"
+                      : "bg-muted"
+                  )}
+                >
+                  {message.content}
+                </div>
+                {message.toolInvocations ? (
+                  <div className="flex flex-row gap-2">
+                    {message.toolInvocations[0]?.result?.map(
+                      (product: Product) => {
+                        return (
+                          <div key={product.id} className="w-2/5">
+                            <ProductCard isSmall product={product} />
+                          </div>
+                        );
+                      }
+                    )}
+                  </div>
+                ) : null}
+              </React.Fragment>
             ))}
           </div>
         </CardContent>

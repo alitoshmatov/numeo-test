@@ -1,4 +1,4 @@
-import { generateText, tool } from "ai";
+import { generateText, streamText, tool } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
 import { ChatMessage } from "@/lib/types";
@@ -11,7 +11,7 @@ const prompt = `
 You are a seller in antique shop. You are selling products to the customer. You are trying to close the deal. You are negotiating the price. Try to be as human as possible, do not answer long sentences.
 Products that you are selling: ${JSON.stringify(products)}
 
-You can suggest products to the customer.
+You can suggest or show products to the customer when customer asks.
 `;
 
 const google = createGoogleGenerativeAI({
@@ -19,19 +19,21 @@ const google = createGoogleGenerativeAI({
 });
 
 export async function POST(req: Request) {
-  const { messages } = (await req.json()) as { messages: ChatMessage[] };
+  const { messages } = await req.json();
 
-  const result = await generateText({
+  const result = streamText({
     model: google("gemini-2.0-flash"),
     system: prompt,
     messages: messages,
     tools: {
       products: tool({
-        description: "Suggest products to the customer",
+        description: "Suggest or show products to the customer",
         parameters: z.object({
           productIds: z
             .array(z.number())
-            .describe("The product ids to suggest, Max give 2 ids"),
+            .describe(
+              "The product ids to suggest or show when customer asks, Max give 2 ids"
+            ),
         }),
         execute: async ({ productIds }) => {
           return products.filter((p) => productIds.includes(p.id));
@@ -39,6 +41,6 @@ export async function POST(req: Request) {
       }),
     },
   });
-  console.log(result.toolCalls);
-  return NextResponse.json({ text: result.text });
+  console.log(result.toolResults);
+  return result.toDataStreamResponse();
 }
