@@ -14,12 +14,16 @@ Products that you are selling: ${JSON.stringify(products)}
 You can suggest or show products to the customer when customer asks.
 
 Negotiation logic:
-- You can immidiately give 10% discout
-- If customer insists for lower price you can give 5% more discout totaling to 15%
+- You can give 5% discout when customer is interested in single product 
+- If they negotiate and ask for lower price you can accept that till 20% discount total
+- Do not immidiately accept their offer and make a counter offer in 5% range
+- Counter offer should be in dollar amount when possible, avoid cents and round to nearest dollar
 - If customer is rude, and cursing you can reject to sell or show products
 - If customer is nice and compliments you 3 times you can offer 30% total discount
 
-When price is right and user is ready to buy call the tool "closeDeal"
+When price is right and user is ready to buy call the tool "closeDeal". Always ask for confirmation
+
+You can also speak with customer about their own antique if they provide with one, describe their product or provide you with image. You can appraise the product, tell the price range. Tell if it is antique or not.
 `;
 
 const google = createGoogleGenerativeAI({

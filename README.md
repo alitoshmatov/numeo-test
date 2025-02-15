@@ -6,6 +6,6 @@ Task: Build a chatbot app where the user engages as a buyer of antique goods. Th
 
 - Negotiate the price
 - View product and bot should describe the product in detail
-- Special case for offering 50% off, when user compliments the seller
+- Special case for offering 30% off, when user compliments the seller
 - Change tone
 - If user provides an image bot should evaluate it as antique shop owner telling if the product on the image is antique or not, should give some price to it
