@@ -22,7 +22,10 @@ import SoldProduct from "./sold-product";
 
 export function Chat() {
   const { status, messages, input, handleInputChange, handleSubmit } = useChat({
-    initialMessages: JSON.parse(localStorage.getItem("messages") || "[]"),
+    initialMessages:
+      typeof window !== "undefined"
+        ? JSON.parse(localStorage.getItem("messages") || "[]")
+        : [],
     maxSteps: 2,
   });
   const [isMaxStorage, setIsMaxStorage] = useState(false);
@@ -38,10 +41,12 @@ export function Chat() {
   }, [messages]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem("messages", JSON.stringify(messages));
-    } catch (error) {
-      setIsMaxStorage(true);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("messages", JSON.stringify(messages));
+      } catch (error) {
+        setIsMaxStorage(true);
+      }
     }
   }, [messages]);
 

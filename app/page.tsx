@@ -1,3 +1,5 @@
+"use client";
+
 import { Chat } from "@/components/chat";
 import { Products } from "@/components/products";
 
