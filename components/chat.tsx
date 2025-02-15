@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Send, Trash } from "lucide-react";
+import { Send, Trash, ImageIcon, Paperclip } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,7 +21,7 @@ import { UIMessage } from "ai";
 import SoldProduct from "./sold-product";
 
 export function Chat() {
-  const { messages, input, handleInputChange, handleSubmit } = useChat({
+  const { status, messages, input, handleInputChange, handleSubmit } = useChat({
     initialMessages: JSON.parse(localStorage.getItem("messages") || "[]"),
     maxSteps: 2,
   });
@@ -94,17 +94,41 @@ export function Chat() {
             }}
             className="flex w-full items-center space-x-2"
           >
-            <input
-              type="file"
-              onChange={(event) => {
-                if (event.target.files) {
-                  setFiles(event.target.files);
-                }
-              }}
-              accept="image/*"
-              multiple
-              ref={fileInputRef}
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                type="file"
+                onChange={(event) => {
+                  if (event.target.files) {
+                    setFiles(event.target.files);
+                  }
+                }}
+                accept="image/*"
+                multiple
+                ref={fileInputRef}
+                className="hidden"
+                id="picture"
+              />
+              <div className="flex gap-2 items-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  className={cn(
+                    "h-9 w-9",
+                    files && files.length > 0 && "text-primary"
+                  )}
+                >
+                  <Paperclip className="h-5 w-5" />
+                  <span className="sr-only">Attach images</span>
+                </Button>
+                {files && files.length > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    {files.length} {files.length === 1 ? "image" : "images"}
+                  </span>
+                )}
+              </div>
+            </div>
             <Input
               id="message"
               placeholder="Type your message..."
@@ -126,24 +150,24 @@ export function Chat() {
 
 const MessageItem = ({ message }: { message: UIMessage }) => {
   const showProductsTool = message.toolInvocations?.find(
-    (item) => item.toolName === "products"
+    (item) => item.toolName === "products" && "result" in item
   );
   const closeDealTool = message.toolInvocations?.find(
-    (item) => item.toolName === "closeDeal"
+    (item) => item.toolName === "closeDeal" && "result" in item
   );
 
   return (
     <>
-      {closeDealTool?.result ? (
+      {closeDealTool && "result" in closeDealTool && (
         <SoldProduct
-          price={closeDealTool.result.price}
-          product={closeDealTool.result.product as Product}
+          price={(closeDealTool.result as any).price}
+          product={(closeDealTool.result as any).product as Product}
         />
-      ) : null}
+      )}
 
-      {showProductsTool ? (
+      {showProductsTool && "result" in showProductsTool && (
         <div className="flex flex-row gap-2">
-          {showProductsTool.result?.map((product: Product) => {
+          {(showProductsTool.result as Product[])?.map((product: Product) => {
             return (
               <div key={product.id} className="w-2/5">
                 <ProductCard isSmall product={product} />
@@ -151,7 +175,7 @@ const MessageItem = ({ message }: { message: UIMessage }) => {
             );
           })}
         </div>
-      ) : null}
+      )}
       <div
         className={cn(
           "flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
