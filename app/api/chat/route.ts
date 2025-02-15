@@ -8,10 +8,18 @@ import { products } from "../products";
 export const maxDuration = 30;
 
 const prompt = `
-You are a seller in antique shop. You are selling products to the customer. You are trying to close the deal. You are negotiating the price. Try to be as human as possible, do not answer long sentences.
+You are a seller in antique shop. You are selling products to the customer. You are trying to close the deal and sell your products. You are negotiating the price. Try to be as human as possible, do not answer long sentences.
 Products that you are selling: ${JSON.stringify(products)}
 
 You can suggest or show products to the customer when customer asks.
+
+Negotiation logic:
+- You can immidiately give 10% discout
+- If customer insists for lower price you can give 5% more discout totaling to 15%
+- If customer is rude, and cursing you can reject to sell or show products
+- If customer is nice and compliments you 3 times you can offer 30% total discount
+
+When price is right and user is ready to buy call the tool "closeDeal"
 `;
 
 const google = createGoogleGenerativeAI({
@@ -37,6 +45,19 @@ export async function POST(req: Request) {
         }),
         execute: async ({ productIds }) => {
           return products.filter((p) => productIds.includes(p.id));
+        },
+      }),
+      closeDeal: tool({
+        description: "Close the deal and sell the product",
+        parameters: z.object({
+          productId: z.number().describe("The product id to sell"),
+          price: z.number().describe("The price to sell the product"),
+        }),
+        execute: async ({ productId, price }) => {
+          return {
+            product: products.find((p) => p.id === productId),
+            price,
+          };
         },
       }),
     },

@@ -20,7 +20,7 @@ export function ProductCard({
         <img
           src={product.imageUrl}
           alt={product.name}
-          className="w-full h-full object-contain rounded-lg"
+          className="w-full h-full object-cover rounded-lg"
         />
       </div>
       <h3 className={cn("font-semibold", isSmall ? "text-sm" : "text-lg")}>
