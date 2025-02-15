@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useChat } from "@ai-sdk/react";
 import { Product } from "@/lib/types";
 import { ProductCard } from "./products";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { UIMessage } from "ai";
 import SoldProduct from "./sold-product";
 
@@ -40,10 +40,9 @@ export function Chat() {
     localStorage.setItem("messages", JSON.stringify(messages));
   }, [messages]);
 
-  const [open, setOpen] = React.useState(false);
-
   const inputLength = input.trim().length;
-
+  const [files, setFiles] = useState<FileList | undefined>(undefined);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   return (
     <>
       <Card className="h-full flex flex-col">
@@ -83,10 +82,29 @@ export function Chat() {
             onSubmit={(event) => {
               event.preventDefault();
               if (inputLength === 0) return;
-              handleSubmit(event);
+              handleSubmit(event, {
+                experimental_attachments: files,
+              });
+
+              setFiles(undefined);
+
+              if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+              }
             }}
             className="flex w-full items-center space-x-2"
           >
+            <input
+              type="file"
+              onChange={(event) => {
+                if (event.target.files) {
+                  setFiles(event.target.files);
+                }
+              }}
+              accept="image/*"
+              multiple
+              ref={fileInputRef}
+            />
             <Input
               id="message"
               placeholder="Type your message..."
@@ -143,6 +161,19 @@ const MessageItem = ({ message }: { message: UIMessage }) => {
         )}
       >
         {message.content}
+        <div>
+          {message.experimental_attachments
+            ?.filter((attachment) =>
+              attachment.contentType?.startsWith("image/")
+            )
+            .map((attachment, index) => (
+              <img
+                key={`${message.id}-${index}`}
+                src={attachment.url}
+                alt={attachment.name}
+              />
+            ))}
+        </div>
       </div>
     </>
   );
