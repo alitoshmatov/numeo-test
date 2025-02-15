@@ -54,7 +54,24 @@ export function Products() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
-      <h2 className="text-2xl font-bold mb-4 flex-none">Antique Products</h2>
+      <div className="bg-blue-50 p-4 rounded-lg mb-4 flex-none">
+        <h3 className="font-semibold mb-2">How to use:</h3>
+        <p className="text-gray-600">
+          Some notes:
+          <br />- Can negotiate till 20% discount
+          <br />- Ask for suggestion or to show products
+          <br />- When deal is confirmed closes the deal by showing "Sold!" Card
+          <br />- Special case you get 30% deal if you compliment the seller 3
+          times
+          <br />- You can provide image for appraisal
+          <br />
+          <span className="bg-red-200 text-red-800 p-1 rounded-md">
+            Warning: Local storage only - image uploads will slow down model
+            response
+          </span>
+        </p>
+      </div>
+      {/* <h2 className="text-2xl font-bold mb-4 flex-none">Antique Products</h2> */}
       <div className="overflow-y-auto flex-1 -mx-4 px-4">
         <div className="grid grid-cols-2 gap-4 pr-2">
           {products.map((product) => (

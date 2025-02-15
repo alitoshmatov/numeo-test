@@ -25,6 +25,7 @@ export function Chat() {
     initialMessages: JSON.parse(localStorage.getItem("messages") || "[]"),
     maxSteps: 2,
   });
+  const [isMaxStorage, setIsMaxStorage] = useState(false);
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
@@ -37,7 +38,11 @@ export function Chat() {
   }, [messages]);
 
   useEffect(() => {
-    localStorage.setItem("messages", JSON.stringify(messages));
+    try {
+      localStorage.setItem("messages", JSON.stringify(messages));
+    } catch (error) {
+      setIsMaxStorage(true);
+    }
   }, [messages]);
 
   const inputLength = input.trim().length;
@@ -78,70 +83,81 @@ export function Chat() {
           </div>
         </CardContent>
         <CardFooter className="shrink-0">
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (inputLength === 0) return;
-              handleSubmit(event, {
-                experimental_attachments: files,
-              });
-
-              setFiles(undefined);
-
-              if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-              }
-            }}
-            className="flex w-full items-center space-x-2"
-          >
-            <div className="flex items-center gap-2">
-              <Input
-                type="file"
-                onChange={(event) => {
-                  if (event.target.files) {
-                    setFiles(event.target.files);
-                  }
-                }}
-                accept="image/*"
-                multiple
-                ref={fileInputRef}
-                className="hidden"
-                id="picture"
-              />
-              <div className="flex gap-2 items-center">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => fileInputRef.current?.click()}
-                  className={cn(
-                    "h-9 w-9",
-                    files && files.length > 0 && "text-primary"
-                  )}
-                >
-                  <Paperclip className="h-5 w-5" />
-                  <span className="sr-only">Attach images</span>
-                </Button>
-                {files && files.length > 0 && (
-                  <span className="text-xs text-muted-foreground">
-                    {files.length} {files.length === 1 ? "image" : "images"}
-                  </span>
-                )}
-              </div>
-            </div>
-            <Input
-              id="message"
-              placeholder="Type your message..."
-              className="flex-1"
-              autoComplete="off"
-              value={input}
-              onChange={handleInputChange}
-            />
-            <Button type="submit" size="icon" disabled={inputLength === 0}>
-              <Send />
-              <span className="sr-only">Send</span>
+          {isMaxStorage ? (
+            <Button
+              onClick={() => {
+                localStorage.removeItem("messages");
+                window.location.reload();
+              }}
+            >
+              Clear storage
             </Button>
-          </form>
+          ) : (
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (inputLength === 0) return;
+                handleSubmit(event, {
+                  experimental_attachments: files,
+                });
+
+                setFiles(undefined);
+
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = "";
+                }
+              }}
+              className="flex w-full items-center space-x-2"
+            >
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  onChange={(event) => {
+                    if (event.target.files) {
+                      setFiles(event.target.files);
+                    }
+                  }}
+                  accept="image/*"
+                  multiple
+                  ref={fileInputRef}
+                  className="hidden"
+                  id="picture"
+                />
+                <div className="flex gap-2 items-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => fileInputRef.current?.click()}
+                    className={cn(
+                      "h-9 w-9",
+                      files && files.length > 0 && "text-primary"
+                    )}
+                  >
+                    <Paperclip className="h-5 w-5" />
+                    <span className="sr-only">Attach images</span>
+                  </Button>
+                  {files && files.length > 0 && (
+                    <span className="text-xs text-muted-foreground">
+                      {files.length} {files.length === 1 ? "image" : "images"}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <Input
+                id="message"
+                placeholder="Type your message..."
+                className="flex-1"
+                autoComplete="off"
+                value={input}
+                onChange={handleInputChange}
+              />
+              <Button type="submit" size="icon" disabled={inputLength === 0}>
+                <Send />
+                <span className="sr-only">Send</span>
+              </Button>
+            </form>
+          )}
         </CardFooter>
       </Card>
     </>
